@@ -2,17 +2,22 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 func GetNumberedHandler(ReplicaNumber int) func(*gin.Context) {
 	return func(c *gin.Context) {
+		log.Println("Starting wait...")
+		time.Sleep(20 * time.Second)
+		log.Println("ending wait...")
 		c.JSON(http.StatusOK, gin.H{
 			"message": fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
 		})
@@ -30,7 +35,7 @@ func getHealthHandlerFunc() func(*gin.Context) {
 func main() {
 	argsWithoutProg := os.Args[1:]
 	serverPortStart := 8080
-	// gin.SetMode(gin.ReleaseMode)
+	gin.SetMode(gin.ReleaseMode)
 
 	replicas := 1
 	var err error
