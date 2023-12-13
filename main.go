@@ -15,6 +15,14 @@ import (
 
 func GetNumberedHandler(ReplicaNumber int) func(*gin.Context) {
 	return func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{
+			"message": fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
+		})
+	}
+}
+
+func GetDelayedHandler(ReplicaNumber int) func(*gin.Context) {
+	return func(c *gin.Context) {
 		log.Println("Starting wait...")
 		time.Sleep(20 * time.Second)
 		log.Println("ending wait...")
@@ -51,10 +59,13 @@ func main() {
 		router.Use(gin.Recovery())
 
 		handlerFunc := GetNumberedHandler(ReplicaNumber)
-		router.GET("/", handlerFunc)
+		router.GET("/:path", handlerFunc)
 
 		healthHandlerFunc := getHealthHandlerFunc()
 		router.GET("/health", healthHandlerFunc)
+
+		delayedHandlerFunc := GetDelayedHandler(ReplicaNumber)
+		router.GET("/delayed", delayedHandlerFunc)
 
 		fmt.Printf("API for replica #%v started\n", ReplicaNumber)
 		go router.Run(fmt.Sprintf("localhost:%v", serverPortStart+ReplicaNumber))
