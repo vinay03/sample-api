@@ -59,6 +59,7 @@ func main() {
 		router.Use(gin.Recovery())
 
 		handlerFunc := GetNumberedHandler(ReplicaNumber)
+		router.GET("/", handlerFunc)
 		router.GET("/:path", handlerFunc)
 
 		healthHandlerFunc := getHealthHandlerFunc()
