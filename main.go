@@ -42,7 +42,7 @@ func getHealthHandlerFunc() func(*gin.Context) {
 
 func main() {
 	argsWithoutProg := os.Args[1:]
-	serverPortStart := 8080
+	serverPortStart := 8090
 	gin.SetMode(gin.ReleaseMode)
 
 	replicas := 1
@@ -64,11 +64,12 @@ func main() {
 
 		healthHandlerFunc := getHealthHandlerFunc()
 		router.GET("/health", healthHandlerFunc)
+		router.POST("/health", healthHandlerFunc)
 
 		delayedHandlerFunc := GetDelayedHandler(ReplicaNumber)
 		router.GET("/delayed", delayedHandlerFunc)
 
-		fmt.Printf("API for replica #%v started\n", ReplicaNumber)
+		fmt.Printf("API for replica #%v started listening at localhost:%v\n", ReplicaNumber, serverPortStart+ReplicaNumber)
 		go router.Run(fmt.Sprintf("localhost:%v", serverPortStart+ReplicaNumber))
 	}
 
