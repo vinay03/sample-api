@@ -16,7 +16,8 @@ import (
 func GetNumberedHandler(ReplicaNumber int) func(*gin.Context) {
 	return func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"message": fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
+			"message":  fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
+			"_headers": c.Request.Header,
 		})
 	}
 }
