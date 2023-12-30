@@ -13,12 +13,25 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type TestServerDummyResponse struct {
+	Message   string      `json:"message"`
+	Headers   http.Header `json:"_headers"`
+	ReplicaId int         `json:"replicaId"`
+	Host      string      `json:"host"`
+}
+
+type TestServerDummyDelayedResponse struct {
+	Message   string `json:"message"`
+	ReplicaId int    `json:"replicaId"`
+}
+
 func GetNumberedHandler(ReplicaNumber int) func(*gin.Context) {
 	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message":  fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
-			"_headers": c.Request.Header,
-			"host":     c.Request.Host,
+		c.JSON(http.StatusOK, TestServerDummyResponse{
+			Message:   fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
+			Headers:   c.Request.Header,
+			Host:      c.Request.Host,
+			ReplicaId: ReplicaNumber,
 		})
 	}
 }
@@ -28,8 +41,9 @@ func GetDelayedHandler(ReplicaNumber int) func(*gin.Context) {
 		log.Println("Starting wait...")
 		time.Sleep(20 * time.Second)
 		log.Println("ending wait...")
-		c.JSON(http.StatusOK, gin.H{
-			"message": fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
+		c.JSON(http.StatusOK, TestServerDummyDelayedResponse{
+			Message:   fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
+			ReplicaId: ReplicaNumber,
 		})
 	}
 }
