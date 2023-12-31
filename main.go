@@ -14,10 +14,10 @@ import (
 )
 
 type TestServerDummyResponse struct {
-	Message   string      `json:"message"`
-	Headers   http.Header `json:"_headers"`
-	ReplicaId int         `json:"replicaId"`
-	Host      string      `json:"host"`
+	Message   string            `json:"message"`
+	Headers   map[string]string `json:"_headers"`
+	ReplicaId int               `json:"replicaId"`
+	Host      string            `json:"host"`
 }
 
 type TestServerDummyDelayedResponse struct {
@@ -27,12 +27,20 @@ type TestServerDummyDelayedResponse struct {
 
 func GetNumberedHandler(ReplicaNumber int) func(*gin.Context) {
 	return func(c *gin.Context) {
-		c.JSON(http.StatusOK, TestServerDummyResponse{
+		response := TestServerDummyResponse{
 			Message:   fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
-			Headers:   c.Request.Header,
 			Host:      c.Request.Host,
 			ReplicaId: ReplicaNumber,
-		})
+		}
+		response.Headers = make(map[string]string)
+		for name, values := range c.Request.Header {
+			for _, value := range values {
+				response.Headers[name] = value
+			}
+		}
+
+		c.JSON(http.StatusOK, response)
+
 	}
 }
 
@@ -41,10 +49,20 @@ func GetDelayedHandler(ReplicaNumber int) func(*gin.Context) {
 		log.Println("Starting wait...")
 		time.Sleep(20 * time.Second)
 		log.Println("ending wait...")
-		c.JSON(http.StatusOK, TestServerDummyDelayedResponse{
+
+		response := TestServerDummyResponse{
 			Message:   fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
+			Host:      c.Request.Host,
 			ReplicaId: ReplicaNumber,
-		})
+		}
+		response.Headers = make(map[string]string)
+		for name, values := range c.Request.Header {
+			for _, value := range values {
+				response.Headers[name] = value
+			}
+		}
+
+		c.JSON(http.StatusOK, response)
 	}
 }
 
