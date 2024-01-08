@@ -44,16 +44,28 @@ func GetNumberedHandler(ReplicaNumber int) func(*gin.Context) {
 	}
 }
 
-func GetDelayedHandler(ReplicaNumber int) func(*gin.Context) {
+func GetDelayedHandler(ReplicaNumber int, defaultDelayInterval time.Duration) func(*gin.Context) {
 	return func(c *gin.Context) {
-		log.Println("Starting wait...")
-		time.Sleep(20 * time.Second)
+		delayInterval := defaultDelayInterval
+		inputData := struct {
+			Delay int `json:"delay"`
+		}{}
+
+		err := c.BindJSON(&inputData)
+		if err == nil {
+			if inputData.Delay > 0 && inputData.Delay <= 20 {
+				delayInterval = time.Duration(inputData.Delay * int(time.Second))
+			}
+		}
+
+		log.Printf("Starting wait for '%v'\n", delayInterval)
+		time.Sleep(delayInterval)
 		log.Println("ending wait...")
 
 		response := TestServerDummyResponse{
 			Message:   fmt.Sprintf("Response to URI '%v' from Replica #%v", c.Request.URL, ReplicaNumber),
 			Host:      c.Request.Host,
-			ReplicaId: ReplicaNumber,
+			ReplicaId: inputData.Delay,
 		}
 		response.Headers = make(map[string]string)
 		for name, values := range c.Request.Header {
@@ -100,8 +112,9 @@ func main() {
 		router.GET("/health", healthHandlerFunc)
 		router.POST("/health", healthHandlerFunc)
 
-		delayedHandlerFunc := GetDelayedHandler(ReplicaNumber)
+		delayedHandlerFunc := GetDelayedHandler(ReplicaNumber, 5*time.Second)
 		router.GET("/delayed", delayedHandlerFunc)
+		router.POST("/delayed", delayedHandlerFunc)
 
 		fmt.Printf("API for replica #%v started listening at localhost:%v\n", ReplicaNumber, serverPortStart+ReplicaNumber)
 		go router.Run(fmt.Sprintf("localhost:%v", serverPortStart+ReplicaNumber))
